@@ -1,6 +1,7 @@
+const express = require('express');
 const router = express.Router();
 
-const {register,login}= ('../controllers/user-controller.js')
+const {register,login}= ('../controllers/userController.js')
 
 router.post('/api/v1/register', register);
 
