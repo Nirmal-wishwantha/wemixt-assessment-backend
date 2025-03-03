@@ -1,19 +1,16 @@
 const express = require('express');
 const app = express();
-
 const cors = require('cors');
+const userRoutes = require('./routes/userRoute');
 
 // CORS middleware
 app.use(cors());
 
-// Encode all resources
-app.use(
-    express.urlencoded({
-        extended: true,
-    })
-);
-
-// Accept JSON objects
+// Middleware for parsing JSON and URL-encoded bodies
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// User routes
+app.use('/api/v1/users', userRoutes);
 
 module.exports = app;
