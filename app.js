@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const userRoutes = require('./routes/userRoute');
+const memberRoutes = require('./routes/memberRoutes')
 
 // CORS middleware
 app.use(cors());
@@ -12,5 +13,6 @@ app.use(express.json());
 
 // User routes
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/members', memberRoutes);
 
 module.exports = app;
