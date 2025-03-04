@@ -3,6 +3,8 @@ const app = express();
 const cors = require('cors');
 const userRoutes = require('./routes/userRoute');
 const memberRoutes = require('./routes/memberRoutes')
+const documentRoutes = require('./routes/documentRoutes')
+const path = require("path");
 
 
 // CORS middleware
@@ -19,11 +21,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use("/images", express.static("uploads/images"));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 
 // User routes
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/members', memberRoutes);
+app.use('/api/v1/document', documentRoutes);
 
 
 

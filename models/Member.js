@@ -12,3 +12,13 @@
 //   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 //   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 // );
+
+
+
+
+// CREATE TABLE documents (
+//     id INT AUTO_INCREMENT PRIMARY KEY,
+//     documentPath VARCHAR(255) NOT NULL,
+//     user_id INT,
+//     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+// );
