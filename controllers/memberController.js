@@ -1,128 +1,104 @@
-const db = require("../database/db");
-const multer = require('multer');
-const path = require('path');
+const db = require("../database/db"); // Import database connection
+const path = require("path");
+const fs = require("fs");
 
-
-// Configure multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'storage/'); // Specify the directory to save uploaded files
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // Append extension
-  }
-});
-
-// Initialize multer
-const upload = multer({ storage: storage });
-
-// Add a member
-const addMember = async (req, res) => {
-  try {
+// Add Member
+const addMember = (req, res) => {
     const { fullName, email, phoneNumber, address, dateOfBirth, gender, bio } = req.body;
-    const profilePicture = req.file ? req.file.path : null; // Get the path of the uploaded file
+    const profilePicture = req.file ? req.file.filename : null;
 
-    // Validate input
-    if (!fullName || !email) {
-      return res.status(400).json({ message: "Please provide required fields" });
-    }
-
-    const query = "INSERT INTO members (fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-    db.query(query, [fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio], (err, result) => {
-      if (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-          return res.status(400).json({ message: "Email or phone number already exists" });
-        }
-        return res.status(500).json({ error: err.message });
-      }
-      res.status(201).json({ message: "Member added successfully", memberId: result.insertId });
+    const sql = "INSERT INTO members (fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    db.query(sql, [fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ message: "Member added successfully", memberId: result.insertId });
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
 };
 
 
 
-
-
-// Get all members
-const getMembers = (req, res) => {
-  const query = "SELECT * FROM members";
-
-  db.query(query, (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.status(200).json(results);
-  });
-};
-
-// Get member by ID
-const getMemberById = (req, res) => {
-  const query = "SELECT * FROM members WHERE id = ?";
-
-  db.query(query, [req.params.id], (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    if (result.length === 0) {
-      return res.status(404).json({ message: "Member not found" });
-    }
-    res.status(200).json(result[0]);
-  });
-};
-
-// Update member
-const updateMember = async (req, res) => {
+// Get Members
+const getMembers = async (req, res) => {
   try {
-    const { fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio } = req.body;
-
-    // Validate input
-    if (!fullName || !email) {
-      return res.status(400).json({ message: "Please provide required fields" });
-    }
-
-    const query = "UPDATE members SET fullName = ?, email = ?, phoneNumber = ?, address = ?, profilePicture = ?, dateOfBirth = ?, gender = ?, bio = ? WHERE id = ?";
-
-    db.query(query, [fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio, req.params.id], (err, result) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "Member not found" });
-      }
-      res.status(200).json({ message: "Member updated successfully" });
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    const [results] = await db.query("SELECT * FROM members");
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-// Delete member
-const deleteMember = (req, res) => {
-  const query = "DELETE FROM members WHERE id = ?";
 
-  db.query(query, [req.params.id], (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Member not found" });
-    }
-    res.status(200).json({ message: "Member deleted successfully" });
-  });
+
+// Update Member (including profile picture)
+const updateMember = async (req, res) => {
+  const { id } = req.params;
+  const { fullName, email, phoneNumber, address, dateOfBirth, gender, bio } = req.body;
+  const profilePicture = req.file ? req.file.filename : null;
+
+  try {
+      let sql;
+      let values;
+
+      if (profilePicture) {
+          // Get the old profile picture
+          const [oldProfile] = await db.query("SELECT profilePicture FROM members WHERE id=?", [id]);
+
+          if (oldProfile.length > 0 && oldProfile[0].profilePicture) {
+              const oldFilePath = path.join(__dirname, "../uploads/images", oldProfile[0].profilePicture);
+
+              // Delete the old profile picture
+              fs.unlink(oldFilePath, (err) => {
+                  if (err) console.error("Error deleting old profile picture:", err);
+              });
+          }
+
+          // Update with new profile picture
+          sql = `UPDATE members SET fullName=?, email=?, phoneNumber=?, address=?, profilePicture=?, dateOfBirth=?, gender=?, bio=? WHERE id=?`;
+          values = [fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio, id];
+      } else {
+          // Update without changing profile picture
+          sql = `UPDATE members SET fullName=?, email=?, phoneNumber=?, address=?, dateOfBirth=?, gender=?, bio=? WHERE id=?`;
+          values = [fullName, email, phoneNumber, address, dateOfBirth, gender, bio, id];
+      }
+
+      // Execute update query
+      const [result] = await db.query(sql, values);
+
+      if (result.affectedRows === 0) {
+          return res.status(404).json({ error: "Member not found" });
+      }
+
+      res.json({ message: "Member updated successfully" });
+
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
 };
 
-module.exports = {
-  deleteMember,
-  updateMember,
-  getMemberById,
-  getMembers,
-  addMember,
-  upload
+// Delete Member
+const deleteMember = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+      // Get the profile picture filename
+      const [results] = await db.query("SELECT profilePicture FROM members WHERE id=?", [id]);
+
+      if (results.length > 0 && results[0].profilePicture) {
+          const filePath = path.join(__dirname, "../uploads/images", results[0].profilePicture);
+
+          // Delete the image file
+          fs.unlink(filePath, (err) => {
+              if (err) console.error("Error deleting file:", err);
+          });
+      }
+
+      // Delete member from the database
+      await db.query("DELETE FROM members WHERE id=?", [id]);
+
+      res.json({ message: "Member deleted successfully" });
+
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
 };
+
+module.exports = { addMember, getMembers, deleteMember, updateMember };
