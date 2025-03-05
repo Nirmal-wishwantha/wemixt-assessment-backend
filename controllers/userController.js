@@ -96,7 +96,7 @@ const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { fullName, email } = req.body;
-    const profileImage = req.file ? req.file.filename : null; // Get the uploaded file
+    const profileImage = req.file ? req.file.filename : null; 
 
     let query = 'UPDATE users SET fullName = ?, email = ?';
     let values = [fullName, email];

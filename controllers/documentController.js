@@ -9,10 +9,10 @@ const uploadDocument = (req, res) => {
         return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // Extract only the filename from the uploaded file
+   
     const documentFilename = req.file.filename;  
 
-    // Save only the filename in the database
+   
     const sql = "INSERT INTO documents (documentPath, user_id) VALUES (?, ?)";
     db.query(sql, [documentFilename, user_id], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -21,37 +21,46 @@ const uploadDocument = (req, res) => {
 };
 
 
-
-//user id
 const getDocumentsByUserId = (req, res) => {
     const { userid } = req.params;
 
-    console.log("Received user ID:", userid); // Debugging line
+    if (!userid || isNaN(parseInt(userid))) {
+        return res.status(400).json({ error: "Invalid user ID" });
+    }
 
-    const sql = "SELECT * FROM documents WHERE user_id = ?";
-    
+    const sql = "SELECT id, documentPath, user_id FROM documents WHERE user_id = ?";
+
     db.query(sql, [userid], (err, results) => {
         if (err) {
             console.error("Database error:", err.message);
             return res.status(500).json({ error: err.message });
         }
-        
-        console.log("Query results:", results); // Debugging line
-        
+
         if (results.length === 0) {
             return res.status(404).json({ message: "No documents found for this user" });
         }
 
-        // Modify the path to be accessible via HTTP
-        results.forEach(doc => {
-            const documentUrl = doc.documentPath.replace("F:\\01.  Assessment\\backend", "http://localhost:3000");
-            doc.documentPath = documentUrl; // Update the document path to be accessible via URL
+        const updatedResults = results.map(doc => {
+            let documentUrl;
+            if (doc.documentPath.startsWith("F:\\")) {
+                // Ensure to replace file path for local file system
+                documentUrl = doc.documentPath.replace("F:\\01.  Assessment\\backend", "http://localhost:3000");
+            } else {
+                // This is assuming documents are uploaded to the server in a 'uploads/document' folder
+                documentUrl = `http://localhost:3000/uploads/document/${doc.documentPath}`;
+            }
+
+            return {
+                document_id: doc.id,
+                user_id: doc.user_id,
+                file_name: doc.documentPath.split("\\").pop(),
+                file_path: documentUrl
+            };
         });
 
-        res.json(results);
+        res.json(updatedResults);
     });
 };
-
 
 
 
@@ -61,7 +70,7 @@ const updateDocument = (req, res) => {
     const { id } = req.params;
     const { user_id } = req.body;
 
-    // Fetch old document path
+    
     db.query("SELECT documentPath FROM documents WHERE id = ?", [id], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         if (results.length === 0) return res.status(404).json({ message: "Document not found" });
@@ -93,30 +102,28 @@ const updateDocument = (req, res) => {
 
 
 
-// 📌 Delete Document
+
+
 const deleteDocument = (req, res) => {
     const { id } = req.params;
 
-    // Fetch document path before deleting
-    db.query("SELECT documentPath FROM documents WHERE id = ?", [id], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (results.length === 0) return res.status(404).json({ message: "Document not found" });
+    if (!id || isNaN(parseInt(id))) {
+        return res.status(400).json({ error: "Invalid document ID" });
+    }
 
-        const filePath = results[0].documentPath;
+    db.query("DELETE FROM documents WHERE id = ?", [id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Document not found" });
+        }
 
-        // Delete document from the database
-        db.query("DELETE FROM documents WHERE id = ?", [id], (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
-            if (result.affectedRows === 0) return res.status(404).json({ message: "Document not found" });
-
-            // Delete the actual file
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-
-            res.json({ message: "Document deleted successfully" });
-        });
+        res.json({ message: "Document deleted successfully from database" });
     });
 };
+
+
+
 
 module.exports = { uploadDocument, updateDocument, deleteDocument, getDocumentsByUserId };
