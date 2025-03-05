@@ -6,6 +6,8 @@ const memberRoutes = require('./routes/memberRoutes')
 const documentRoutes = require('./routes/documentRoutes')
 const path = require("path");
 
+const docRoutes = require('./routes/docRoute')
+
 
 // CORS middleware
 
@@ -21,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use("/images", express.static("uploads/images"));
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
@@ -29,7 +32,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/members', memberRoutes);
 app.use('/api/v1/document', documentRoutes);
-
+app.use('/api/v1/', docRoutes);
 
 
 module.exports = app;
