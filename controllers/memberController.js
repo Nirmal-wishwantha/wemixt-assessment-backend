@@ -39,28 +39,28 @@ const updateMember = async (req, res) => {
       let values;
 
       if (profilePicture) {
-          // Get the old profile picture
+         
           const [oldProfile] = await db.query("SELECT profilePicture FROM members WHERE id=?", [id]);
 
           if (oldProfile.length > 0 && oldProfile[0].profilePicture) {
               const oldFilePath = path.join(__dirname, "../uploads/images", oldProfile[0].profilePicture);
 
-              // Delete the old profile picture
+              
               fs.unlink(oldFilePath, (err) => {
                   if (err) console.error("Error deleting old profile picture:", err);
               });
           }
 
-          // Update with new profile picture
+          
           sql = `UPDATE members SET fullName=?, email=?, phoneNumber=?, address=?, profilePicture=?, dateOfBirth=?, gender=?, bio=? WHERE id=?`;
           values = [fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio, id];
       } else {
-          // Update without changing profile picture
+          
           sql = `UPDATE members SET fullName=?, email=?, phoneNumber=?, address=?, dateOfBirth=?, gender=?, bio=? WHERE id=?`;
           values = [fullName, email, phoneNumber, address, dateOfBirth, gender, bio, id];
       }
 
-      // Execute update query
+     
       const [result] = await db.query(sql, values);
 
       if (result.affectedRows === 0) {
@@ -79,19 +79,19 @@ const deleteMember = async (req, res) => {
   const { id } = req.params;
 
   try {
-      // Get the profile picture filename
+      
       const [results] = await db.query("SELECT profilePicture FROM members WHERE id=?", [id]);
 
       if (results.length > 0 && results[0].profilePicture) {
           const filePath = path.join(__dirname, "../uploads/images", results[0].profilePicture);
 
-          // Delete the image file
+          
           fs.unlink(filePath, (err) => {
               if (err) console.error("Error deleting file:", err);
           });
       }
 
-      // Delete member from the database
+      
       await db.query("DELETE FROM members WHERE id=?", [id]);
 
       res.json({ message: "Member deleted successfully" });

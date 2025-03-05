@@ -39,8 +39,17 @@ const upload = multer({
 
 // Routes
 router.post("/add", upload.single("document"), uploadDocument);
+
+
 router.get("/user/:userid", getDocumentsByUserId);
-router.put("/:id", upload.single("document"), updateDocument);
+
+
 router.delete("/:id", deleteDocument);
+
+// router.get("/user/:userid", getDocumentsByUserId);
+
+router.put("/:id", upload.single("document"), updateDocument);
+
+// router.delete("/:id", deleteDocument);
 
 module.exports = router;
