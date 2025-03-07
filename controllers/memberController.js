@@ -48,13 +48,21 @@ const addMember = async (req, res) => {
 
 // Get Members
 const getMembers = async (req, res) => {
+    const { user_id } = req.params; // Get user_id from URL parameters
+
     try {
-        const [results] = await db.query("SELECT * FROM members");
+        const [results] = await db.query("SELECT * FROM members WHERE user_id = ?", [user_id]);
+        
+        if (results.length === 0) {
+            return res.status(404).json({ message: "No members found for this user." });
+        }
+
         res.json(results);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
+
 
 // Update Member (including profile picture)
 const updateMember = async (req, res) => {
@@ -97,11 +105,11 @@ const updateMember = async (req, res) => {
     }
 };
 
-// Delete Member
+
 const deleteMember = async (req, res) => {
     const { id } = req.params;
     try {
-        // Retrieve profile picture before deleting the member
+       
         const [member] = await db.query("SELECT profilePicture FROM members WHERE id=?", [id]);
 
         if (member.length > 0 && member[0].profilePicture) {

@@ -8,14 +8,10 @@ const { addMember, getMembers, deleteMember, updateMember,uploadProfile,uploadUr
 router.post("/add/:userId", addMember);
 //profile pic
 router.post("/profilePicture", uploadProfile.single("profilePicture"),uploadUrl);
-router.get("/all", getMembers);
+
+router.get("/:user_id", getMembers);
 router.put("/:id",updateMember);
 router.delete("/:id", deleteMember);
 
-// documents
-//path add member id document database
-// router.post('/add',addDocument);
-// get document member Id
-// router.get('/get/:memberId',getAllDocumentMember)
 
 module.exports = router;
