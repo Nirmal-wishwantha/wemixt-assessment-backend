@@ -27,7 +27,6 @@ const uploadUrl = (req, res) => {
 };
 
 
-
 const addDocument = async (req, res) => {
     try {
         // Validate input

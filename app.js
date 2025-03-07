@@ -29,11 +29,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // User routes
 app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/', userdocumentRoutes);
+app.use('/api/v1/user/document', userdocumentRoutes);
 
 //member
 app.use('/api/v1/members', memberRoutes);
-app.use('/api/v1/doc', memberDocumentRoutes);
+app.use('/api/v1/member/document', memberDocumentRoutes);
 
 
 
