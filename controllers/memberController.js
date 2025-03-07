@@ -52,7 +52,7 @@ const getMembers = async (req, res) => {
 
     try {
         const [results] = await db.query("SELECT * FROM members WHERE user_id = ?", [user_id]);
-        
+
         if (results.length === 0) {
             return res.status(404).json({ message: "No members found for this user." });
         }
@@ -67,23 +67,13 @@ const getMembers = async (req, res) => {
 // Update Member (including profile picture)
 const updateMember = async (req, res) => {
     const { id } = req.params;
-    const { fullName, email, phoneNumber, address, dateOfBirth, gender, bio } = req.body;
-    const profilePicture = req.file ? req.file.filename : null;
+    const { fullName, email, phoneNumber, address, dateOfBirth, gender, bio, profilePicture } = req.body;
 
     try {
         let sql;
         let values;
 
         if (profilePicture) {
-            // Retrieve old profile picture
-            const [oldProfile] = await db.query("SELECT profilePicture FROM members WHERE id=?", [id]);
-
-            if (oldProfile.length > 0 && oldProfile[0].profilePicture) {
-                const oldFilePath = path.join(__dirname, "../uploads/images", oldProfile[0].profilePicture);
-                fs.unlink(oldFilePath, (err) => {
-                    if (err) console.error("Error deleting old profile picture:", err);
-                });
-            }
 
             sql = `UPDATE members SET fullName=?, email=?, phoneNumber=?, address=?, profilePicture=?, dateOfBirth=?, gender=?, bio=? WHERE id=?`;
             values = [fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio, id];
@@ -109,7 +99,7 @@ const updateMember = async (req, res) => {
 const deleteMember = async (req, res) => {
     const { id } = req.params;
     try {
-       
+
         const [member] = await db.query("SELECT profilePicture FROM members WHERE id=?", [id]);
 
         if (member.length > 0 && member[0].profilePicture) {
