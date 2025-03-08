@@ -11,7 +11,7 @@ const port = 3000;
 const userProfile = multer.diskStorage({
     destination: './uploads/profile',
     filename: (req, file, cb) => {
-        cb(null, `document_${Date.now()}${path.extname(file.originalname)}`);
+        cb(null, `profile_${Date.now()}${path.extname(file.originalname)}`);
     }
 });
 
