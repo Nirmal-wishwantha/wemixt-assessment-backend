@@ -11,7 +11,7 @@ const port = 3000;
 const userProfile = multer.diskStorage({
     destination: './uploads/profile',
     filename: (req, file, cb) => {
-        cb(null, `document_${Date.now()}${path.extname(file.originalname)}`);
+        cb(null, `profile_${Date.now()}${path.extname(file.originalname)}`);
     }
 });
 
@@ -34,16 +34,13 @@ const register = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
 
-    // Check if email already exists
     const [existingUser] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (existingUser.length > 0) {
       return res.status(400).json({ error: 'Email already exists' });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user
     await db.query('INSERT INTO users (fullName, email, password) VALUES (?, ?, ?)', 
       [fullName, email, hashedPassword]);
 
@@ -55,12 +52,11 @@ const register = async (req, res) => {
 };
 
 
-// **User Login Function**
+// User Login Function
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if user exists
     const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (users.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -68,13 +64,11 @@ const loginUser = async (req, res) => {
 
     const user = users[0];
 
-    // Compare hashed password
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Generate JWT token
     const token = jwt.sign({ userId: user.id, email: user.email }, SECRET_KEY, { expiresIn: '1h' });
 
     res.json({ message: 'Login successful', token, user: { id: user.id, fullName: user.fullName, email: user.email, profileImage: user.profileImage } });
@@ -84,31 +78,34 @@ const loginUser = async (req, res) => {
   }
 };
 
-// Get Users
+// Get a Specific User by ID
 const getUser = async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const [users] = await db.query('SELECT id, fullName, email, profileImage FROM users');
+    const [users] = await db.query('SELECT id, fullName, email, profileImage FROM users WHERE id = ?', [id]);
+
     if (users.length === 0) {
-      return res.status(404).json({ error: 'No users found' });
+      return res.status(404).json({ error: 'User not found' });
     }
-    res.json(users);
+
+    res.json(users[0]);
   } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 };
+
 
 // Update User
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const { fullName, email, profileImage } = req.body;
 
-  // SQL query to update user details
   let query = 'UPDATE users SET fullName = ?, email = ?, profileImage = ? WHERE id = ?';
   let values = [fullName, email, profileImage, id];
 
   try {
-    // Execute the query
     const [result] = await db.query(query, values);
 
     if (result.affectedRows === 0) {

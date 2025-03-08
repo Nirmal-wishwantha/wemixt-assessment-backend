@@ -4,7 +4,7 @@ const multer = require('multer');
 
 const port = 3000;
 
-// Document storage configuration
+//Member Document storage configuration
 const documentStorage = multer.diskStorage({
     destination: './uploads/document',
     filename: (req, file, cb) => {
@@ -14,7 +14,7 @@ const documentStorage = multer.diskStorage({
 
 const uploadDocument = multer({ storage: documentStorage });
 
-// Controller method for uploading document
+// Controller Member uploading document
 const uploadUrl = (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: 0, message: 'No file uploaded' });
@@ -29,7 +29,6 @@ const uploadUrl = (req, res) => {
 
 const addDocument = async (req, res) => {
     try {
-        // Validate input
         const { memberId, documentPath, documentName } = req.body;
         if (!memberId || !documentPath || !documentName) {
             return res.status(400).json({ error: "Missing required fields" });
@@ -37,10 +36,8 @@ const addDocument = async (req, res) => {
 
         const sql = "INSERT INTO documents (documentPath, documentName, memberId) VALUES (?, ?, ?)";
         
-        // Execute query
         const [result] = await db.query(sql, [documentPath, documentName, memberId]);
 
-        // Send success response
         res.status(201).json({ message: "Document added successfully", documentId: result.insertId });
     } catch (err) {
         console.error("Database error: ", err);
@@ -71,6 +68,7 @@ const getAllDocumentsUser = (req, res) => {
         });
 };
 
+//get document user
 const getAllDocumentsMember = (req, res) => {
     const { userId } = req.params;
     let query = 'SELECT id, documentPath, userId, documentName FROM documents WHERE userId = ?';
@@ -92,7 +90,7 @@ const getAllDocumentsMember = (req, res) => {
 };
 
 
-
+//delete doc
 const deleteDocument = async (req, res) => {
     const { documentId } = req.params; 
     try {
@@ -112,7 +110,7 @@ const deleteDocument = async (req, res) => {
     }
 };
 
-
+// update doc
 const updateDocumentPath = async (req, res) => {
     try {
         const { documentId } = req.params;
@@ -136,8 +134,6 @@ const updateDocumentPath = async (req, res) => {
         res.status(500).json({ error: "Database error occurred" });
     }
 };
-
-
 
 
 module.exports = { uploadDocument, uploadUrl, addDocument, getAllDocumentsUser, deleteDocument, updateDocumentPath, getAllDocumentsMember };
