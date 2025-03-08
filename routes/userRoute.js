@@ -2,19 +2,15 @@ const express = require('express');
 const { register, getUser, updateUser, userProfilePicture, loginUser, uploadUrl } = require('../controllers/userController');
 const router = express.Router();
 
-// Routes for uploading profile picture
+//uploading profile picture
 router.post('/profile',userProfilePicture.single('profileImage'), uploadUrl);
 
-// Route for user registration
 router.post('/register', register);
 
-// Route for user login
 router.post('/login', loginUser);
 
-// Route for fetching all users
-router.get('/user', getUser);
+router.get('/user/:id', getUser);
 
-// Route for updating user information
 router.put('/:id', userProfilePicture.single('profileImage'), updateUser);
 
 module.exports = router;

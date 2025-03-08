@@ -1,11 +1,11 @@
-const db = require("../database/db"); // Import database connection
+const db = require("../database/db");
 const path = require("path");
 const multer = require('multer');
 const fs = require("fs");
 
 const port = 3000;
 
-// Document storage configuration for profile images
+// Document storage member profile images
 const ProfileStorage = multer.diskStorage({
     destination: './uploads/images',
     filename: (req, file, cb) => {
@@ -15,7 +15,7 @@ const ProfileStorage = multer.diskStorage({
 
 const uploadProfile = multer({ storage: ProfileStorage });
 
-// Controller method for uploading profile image
+// Controller uploading member profile image
 const uploadUrl = (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: 0, message: 'No file uploaded' });
@@ -33,10 +33,9 @@ const addMember = async (req, res) => {
         const userId = req.params.userId;
         const { fullName, email, phoneNumber, address, dateOfBirth, gender, bio, profilePicture } = req.body;
 
-        // SQL query to insert the member into the database
         const sql = "INSERT INTO members (fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        // Execute the SQL query
+       
         const [result] = await db.query(sql, [fullName, email, phoneNumber, address, profilePicture, dateOfBirth, gender, bio, userId]);
 
         res.status(201).json({ message: "Member added successfully", memberId: result.insertId });
@@ -56,7 +55,7 @@ const getMembers = async (req, res) => {
     }
 };
 
-// Update Member (including profile picture)
+// Update Member
 const updateMember = async (req, res) => {
     const { id } = req.params;
     const { fullName, email, phoneNumber, address, dateOfBirth, gender, bio } = req.body;
@@ -67,7 +66,7 @@ const updateMember = async (req, res) => {
         let values;
 
         if (profilePicture) {
-            // Retrieve old profile picture
+            
             const [oldProfile] = await db.query("SELECT profilePicture FROM members WHERE id=?", [id]);
 
             if (oldProfile.length > 0 && oldProfile[0].profilePicture) {
@@ -101,7 +100,7 @@ const updateMember = async (req, res) => {
 const deleteMember = async (req, res) => {
     const { id } = req.params;
     try {
-        // Retrieve profile picture before deleting the member
+       
         const [member] = await db.query("SELECT profilePicture FROM members WHERE id=?", [id]);
 
         if (member.length > 0 && member[0].profilePicture) {

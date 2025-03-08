@@ -29,7 +29,6 @@ const uploadUrl = (req, res) => {
 
 const addDocument = async (req, res) => {
     try {
-        // Validate input
         const { userId, documentPath, documentName } = req.body;
         if (!userId || !documentPath || !documentName) {
             return res.status(400).json({ error: "Missing required fields" });
@@ -37,10 +36,8 @@ const addDocument = async (req, res) => {
 
         const sql = "INSERT INTO documents (documentPath, documentName, userId) VALUES (?, ?, ?)";
         
-        // Execute query
         const [result] = await db.query(sql, [documentPath, documentName, userId]);
 
-        // Send success response
         res.status(201).json({ message: "Document added successfully", documentId: result.insertId });
     } catch (err) {
         console.error("Database error: ", err);
@@ -95,17 +92,15 @@ const getAllDocumentsMember = (req, res) => {
 
 
 const deleteDocument = async (req, res) => {
-    const { documentId } = req.params; // Get document ID from request parameters
-
+    const { documentId } = req.params; 
     try {
-        // Query to delete the document from the database
+        
         const result = await db.query('DELETE FROM documents WHERE id = ?', [documentId]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ success: 0, message: 'Document not found' });
         }
 
-        // Respond with success message if deletion is successful
         res.json({
             success: 1,
             message: 'Document deleted successfully'
@@ -140,8 +135,6 @@ const updateDocumentPath = async (req, res) => {
         res.status(500).json({ error: "Database error occurred" });
     }
 };
-
-
 
 
 module.exports = { uploadDocument, uploadUrl, addDocument, getAllDocumentsUser, deleteDocument, updateDocumentPath, getAllDocumentsMember };
