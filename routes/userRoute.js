@@ -3,7 +3,7 @@ const { register, getUser, updateUser, userProfilePicture, loginUser, uploadUrl 
 const router = express.Router();
 
 // Routes for uploading profile picture
-router.post('/profile', uploadUrl);
+router.post('/profile',userProfilePicture.single('profileImage'), uploadUrl);
 
 // Route for user registration
 router.post('/register', register);
